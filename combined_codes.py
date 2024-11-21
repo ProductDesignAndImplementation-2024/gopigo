@@ -126,6 +126,18 @@ def package_detection():
         print("Package is unloaded")
         package_picked_up = False
 
+def send_message_to_server(message):
+    try:
+        response = requests.post(f"{SERVER_URL}/send-message", json={"message": message})
+        if response.status_code == 200:
+            json_data = response.json()
+            print(f"Message sent: {json_data['message']}")
+        else:
+            print(f"Error: Received status code {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"Exception occurred: {e}")
+    
+
 
 gpg.stop()
 
@@ -154,7 +166,7 @@ async def main():
             global package_picked_up
             if package_picked_up:
                 print("Requesting route...")
-                time.sleep(3)
+                time.sleep(5)
                 route = request_route()
                 while len(route) == 0:
                     print("No route received, requesting again...")
@@ -164,6 +176,7 @@ async def main():
             else:
                 gpg.stop()
                 continue
+            send_message_to_server("Route received")
         
         linevalues = linefollower_easy.read()
         lineposition = linefollower_easy.read_position()
