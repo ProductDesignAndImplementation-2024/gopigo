@@ -47,6 +47,17 @@ def get_command_from_server():
         print(f"Error while fetching command: {e}")
         return None
 
+def send_message_to_server(message):
+    try:
+        response = requests.post(f"{SERVER_URL}/send-message", json={"message": message})
+        if response.status_code == 200:
+            json_data = response.json()
+            print(f"Message sent: {json_data['message']}")
+        else:
+            print(f"Error: Received status code {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"Exception occurred: {e}")
+
 def send_command_to_server(command):
     try:
         response = requests.post(f"{SERVER_URL}/send-command", json={"command": command})
@@ -71,13 +82,16 @@ def main():
             gpg.stop()
         """
         if command == start_command:
-            print("Starting GoPiGo3" + str(GoPiGo3_number))
+            time.sleep(3)
+            send_message_to_server("Starting GoPiGo" + str(GoPiGo3_number))
             gpg.open_eyes()
             time.sleep(1)
             gpg.close_eyes()
             time.sleep(1)
             start = True
             send_command_to_server("start" + str(GoPiGo3_number +1)) # Send start command to next GoPiGo3
+            time.sleep(3)
+            send_message_to_server("Sending start command to GoPiGo" + str(GoPiGo3_number + 1))
 
         time.sleep(5)
 
