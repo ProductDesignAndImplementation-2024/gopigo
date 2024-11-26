@@ -32,6 +32,8 @@ import requests
 
 SERVER_URL = "http://10.0.0.2:5000"
 
+GoPiGo3_number = 1
+
 sensor_readings = None
 
 threshold = 0.1
@@ -183,6 +185,16 @@ def send_message_to_server(message):
     except requests.exceptions.RequestException as e:
         print(f"Exception occurred: {e}")
     
+def send_command_to_server(command):
+    try:
+        response = requests.post(f"{SERVER_URL}/send-command", json={"command": command})
+        if response.status_code == 200:
+            print(f"Command sent: {command}")
+        else:
+            print(f"Error: Received status code {response.status_code}")
+    except requests.exceptions.RequestException as e:
+        print(f"Exception occurred: {e}")
+
 
 
 gpg.stop()
@@ -200,79 +212,131 @@ async def main():
     #route = ["r","l","l","l","f","l","l","r","r","r","r","f","r","r","f","r","f","r","s"]
     attemptnum = 0
     route = []
+    command = None
+    start_command = "start" + str(GoPiGo3_number)
     global route_received
     global followline
     grdclr = False
+    yieldturn = False
+    active = True
     routeindex = 0
     gpg.close_eyes()
     while True:
-        
-        linevalues = linefollower_easy.read()
-        if not route_received:
-            if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
+        while not active:
+            command = get_command_from_server()
+            """
+            if command == "stop":
+                print("Stopping GoPiGo3")
                 gpg.stop()
-                followline = False
+            """
+            if command == start_command:
+                time.sleep(1)
+                send_message_to_server("Starting GoPiGo" + str(GoPiGo3_number))
+                gpg.open_eyes()
+                time.sleep(0.3)
+                gpg.close_eyes()
+                time.sleep(0.3)
+                gpg.close_eyes()
+                time.sleep(0.3)
+                gpg.close_eyes()
+                time.sleep(0.3)
+                active = True
+                break
+                
+
+            time.sleep(5)
+
+    
+    
+        while active:
+            linevalues = linefollower_easy.read()
+            if not route_received:
+                if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
+                    gpg.stop()
+                    followline = False
+                    package_detection()
+                    if package_picked_up:
+                        print("Requesting route...")
+                        time.sleep(5)
+                        followline = True
+                        route = request_route()
+                        attemptnum += 1
+                        gpg.forward()
+                    if attemptnum > 1:
+                        followline = False
+                        gpg.stop()
+                        while len(route) == 0:
+                            print("No route received, requesting again...")
+                            route = request_route()
+                        print(route)
+                        attemptnum = 0
+                        route_received = True
+                        followline = True
+                        gpg.forward()
+                    else:
+                        print("waiting for package...")
+                        continue
+                        
+            if grdclr:
+                if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
+                    gpg.stop()
+                    followline = False
+                    package_detection()
+                    if package_picked_up:
+                        print ("waiting for package removal...")
+                        time.sleep(0.5)
+                        continue
+                    else:
+                        followline = True
+                        yieldturn = True
+                        grdclr = False
+                        gpg.forward()
+
+            if yieldturn
+                if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
+                    gpg.stop
+                    followline = False
+                    active = False
+                    yieldturn = False
+                    gpg.drive_cm(3)
+                        
+                    
+                    
+                '''
                 package_detection()
+                global package_picked_up
                 if package_picked_up:
                     print("Requesting route...")
                     time.sleep(5)
-                    followline = True
                     route = request_route()
-                    attemptnum += 1
-                elif attemptnum > 1:
-                    followline = False
-                    gpg.stop()
                     while len(route) == 0:
                         print("No route received, requesting again...")
                         route = request_route()
                     print(route)
                     route_received = True
                 else:
-                    print("waiting for package...")
+                    gpg.stop()
                     continue
-                    
-        if grdclr:
-            if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
-                gpg.stop()
-                followline = False
-                package_detection()
-                if package_picked_up:
-                    print ("waiting for package removal...")
-                    continue
-                else:
-                    followline = True
-                
-                
-            '''
-            package_detection()
-            global package_picked_up
-            if package_picked_up:
-                print("Requesting route...")
-                time.sleep(5)
-                route = request_route()
-                while len(route) == 0:
-                    print("No route received, requesting again...")
-                    route = request_route()
-                print(route)
-                route_received = True
-            else:
-                gpg.stop()
-                continue
-            send_message_to_server("Route received")
-            '''
-        if route_received:
-            routeindex = crossingdetection(linevalues,route,routeindex)
-            if routeindex == 0:
-                grdclr = True
-        
-        
-        lineposition = linefollower_easy.read_position()
-        q.put(lineposition)
-        #t1.run()
-        #t2.run()
-        #print(linevalues)
-        #print(lineposition)
-        
+                send_message_to_server("Route received")
+                '''
+            if route_received:
+                routeindex = crossingdetection(linevalues,route,routeindex)
+                if routeindex == 0:
+                    route = []
+                    route_received = False
+                    grdclr = True
+                    send_command_to_server("start" + str(GoPiGo3_number +1)) # Send start command to next GoPiGo3
+                    time.sleep(3)
+                    send_message_to_server("Sending start command to GoPiGo" + str(GoPiGo3_number + 1))
+            
+            
+            lineposition = linefollower_easy.read_position()
+            q.put(lineposition)
+            #t1.run()
+            #t2.run()
+            #print(linevalues)
+            #print(lineposition)
+            
 
 
 asyncio.run(main())
