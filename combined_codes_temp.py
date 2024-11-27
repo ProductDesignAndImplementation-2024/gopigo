@@ -238,6 +238,7 @@ async def main():
     gpg.close_eyes()
     while True:
         while not active:
+            send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " is waiting for start command")
             command = get_command_from_server()
             """
             if command == "stop":
@@ -272,9 +273,11 @@ async def main():
                     package_detection()
                     if package_picked_up:
                         print("Requesting route...")
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " picked up package and is requesting route")
                         time.sleep(5)
                         followline = True
                         route = request_route()
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " received route " + str(route))
                         attemptnum += 1
                         gpg.drive_cm(3)
                     if attemptnum > 1:
@@ -282,14 +285,17 @@ async def main():
                         gpg.stop()
                         while len(route) == 0:
                             print("No route received, requesting again...")
+                            send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " did not receive route")
                             route = request_route()
                         print(route)
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " received route " + str(route))
                         attemptnum = 0
                         route_received = True
                         followline = True
                         gpg.drive_cm(3)
                     else:
                         print("waiting for package...")
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " is waiting for package")
                         #continue
                         
             if grdclr:
@@ -299,6 +305,7 @@ async def main():
                     package_detection()
                     if package_picked_up:
                         print ("waiting for package removal...")
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " is waiting for package removal")
                         time.sleep(0.5)
                         continue
                     else:
