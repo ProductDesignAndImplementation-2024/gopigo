@@ -85,7 +85,6 @@ except:
 # start
 
 
-
 def linefollowercontroller():
     print("Linefollower controller enabled")
     while True:
@@ -104,55 +103,7 @@ def linefollowercontroller():
 
                 gpg.right()
     #await asyncio.sleep(0.1)
-'''  
-def crossingdetection(linevalues,route,routeindex,counter):
-    
-    if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold
-    or linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2]< threshold
-    or linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
 
-        counter += 1
-        global followline
-        followline = False
-        gpg.open_eyes()
-
-        
-    while counter > 0:
-                
-        #gpg.drive_cm(7)
-        print(routeindex)
-        print(route[routeindex])
-
-        
-        if route[routeindex] == "r":
-            gpg.drive_cm(7)
-            gpg.orbit(90)
-            #gpg.right()
-            routeindex += 1
-                #continue
-        elif route[routeindex] == "f":
-            gpg.forward()
-            time.sleep(0.2)
-            routeindex += 1
-            #continue
-        elif route[routeindex] == "l":
-            gpg.drive_cm(7)
-            gpg.orbit(-90)
-            #gpg.left()
-            routeindex += 1
-                #continue
-        else:
-            gpg.stop()
-            gpg.close_eyes()
-            routeindex = 0
-            #exit()
-        counter = 0
-        followline = True
-        gpg.close_eyes()
-        return routeindex
-    #await asyncio.sleep(0)
-    
-    '''    
 
 def request_route():
     try:
@@ -245,16 +196,19 @@ async def main():
                 gpg.stop()
             """
             if command == start_command:
-                time.sleep(1)
+                #time.sleep(1)
                 send_message_to_server("Starting GoPiGo" + str(GoPiGo3_number))
                 gpg.open_eyes()
                 time.sleep(0.3)
                 gpg.close_eyes()
                 time.sleep(0.3)
-                gpg.close_eyes()
+                gpg.open_eyes()
                 time.sleep(0.3)
                 gpg.close_eyes()
                 time.sleep(0.3)
+                gpg.open_eyes()
+                time.sleep(0.3)
+                gpg.close_eyes()
                 active = True
                 break
                 
@@ -265,8 +219,9 @@ async def main():
     
         while active:
             linevalues = linefollower_easy.read()
-            if not route_received:
-                if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
+            if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
+
+                while not route_received:
                     gpg.stop()
                     followline = False
                     package_detection()
@@ -292,8 +247,7 @@ async def main():
                         print("waiting for package...")
                         #continue
                         
-            if grdclr:
-                if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
+                if grdclr:
                     gpg.stop()
                     followline = False
                     package_detection()
@@ -307,8 +261,7 @@ async def main():
                         grdclr = False
                         gpg.drive_cm(3)
 
-            if yieldturn:
-                if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold):
+                if yieldturn:
                     gpg.stop
                     followline = False
                     active = False
@@ -370,8 +323,8 @@ async def main():
                         #gpg.left()
                         routeindex += 1
                             #continue
-                    else:
-                        gpg.stop()
+                    if len(route) == routeindex:
+                        #gpg.stop()
                         gpg.close_eyes()
                         routeindex = 0
                         route = []
