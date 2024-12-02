@@ -214,9 +214,9 @@ async def main():
                 break
                 
             gpg.open_eyes()
-            time.sleep(2.5)
+            time.sleep(1)
             gpg.close_eyes()
-            time.sleep(2.5)
+            time.sleep(1)
 
     
     
@@ -230,6 +230,7 @@ async def main():
                     package_detection()
                     if package_picked_up:
                         print ("waiting for package removal...")
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " is waiting for package removal")
                         time.sleep(0.5)
                         continue
                     else:
@@ -247,7 +248,7 @@ async def main():
                     yieldturn = False
                     gpg.forward()
                     time.sleep(0.4)
-                    for x in range(120):
+                    for x in range(90):
                         time.sleep(0.001667)
                         lineposition = linefollower_easy.read_position()
                         q.put(lineposition)
@@ -259,30 +260,38 @@ async def main():
                     gpg.stop()
                     followline = False
                     package_detection()
-                    if package_picked_up:
-                        #print("Requesting route...")
-                        #time.sleep(3)
-                        followline = True
-                        #route = request_route()
-                        attemptnum += 1
-                        gpg.forward()
-                        time.sleep(0.4)
-                        
-                    if attemptnum > 1:
+
+                    if attemptnum > 0:
                         followline = False
                         gpg.stop()
                         while len(route) == 0:
                             print("No route received, requesting again...")
                             route = request_route()
                         print(route)
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " received route " + str(route))
                         attemptnum = 0
                         route_received = True
                         followline = True
                         gpg.forward()
                         time.sleep(0.4)
                         linevalues = linefollower_easy.read()
+                        continue
+
+                    if package_picked_up:
+                        #print("Requesting route...")
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " picked up package and is requesting route")
+                        #time.sleep(3)
+                        followline = True
+                        #route = request_route()
+                        attemptnum += 1
+                        time.sleep(1)
+                        gpg.forward()
+                        time.sleep(0.4)
+                        
+                    
                     if not package_picked_up:
                         print("waiting for package...")
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " is waiting for package")
                         #continue
                         
                 
