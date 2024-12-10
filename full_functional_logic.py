@@ -242,19 +242,7 @@ async def main():
                         time.sleep(0.4)
                         continue
                         
-                if yieldturn:
-                    print("going inactive...")
-                    active = False
-                    yieldturn = False
-                    gpg.forward()
-                    time.sleep(0.4)
-                    for x in range(90):
-                        time.sleep(0.001667)
-                        lineposition = linefollower_easy.read_position()
-                        q.put(lineposition)
-                    gpg.stop()
-                    followline = False
-                    break
+                
                         
                 if not route_received:
                     gpg.stop()
@@ -298,7 +286,19 @@ async def main():
 
 
                         
-                    
+            if yieldturn:
+                    print("going inactive...")
+                    active = False
+                    yieldturn = False
+                    gpg.forward()
+                    time.sleep(0.4)
+                    for x in range(90):
+                        time.sleep(0.001667)
+                        lineposition = linefollower_easy.read_position()
+                        q.put(lineposition)
+                    gpg.stop()
+                    followline = False
+                    break        
                     
                 '''
                 package_detection()
