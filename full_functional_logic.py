@@ -199,15 +199,15 @@ async def main():
                 #time.sleep(1)
                 send_message_to_server("Starting GoPiGo" + str(GoPiGo3_number))
                 gpg.open_eyes()
-                time.sleep(0.3)
+                time.sleep(0.2)
                 gpg.close_eyes()
-                time.sleep(0.3)
+                time.sleep(0.2)
                 gpg.open_eyes()
-                time.sleep(0.3)
+                time.sleep(0.2)
                 gpg.close_eyes()
-                time.sleep(0.3)
+                time.sleep(0.2)
                 gpg.open_eyes()
-                time.sleep(0.3)
+                time.sleep(0.2)
                 gpg.close_eyes()
                 active = True
                 followline = True
@@ -235,6 +235,7 @@ async def main():
                         continue
                     else:
                         print("package removed !")
+                        send_message_to_server("GoPiGo" + str(GoPiGo3_number) + " package removed")
                         followline = True
                         yieldturn = True
                         grdclr = False
@@ -291,7 +292,7 @@ async def main():
                     active = False
                     yieldturn = False
                     gpg.forward()
-                    time.sleep(0.4)
+                    #time.sleep(0.4)
                     for x in range(90):
                         time.sleep(0.001667)
                         lineposition = linefollower_easy.read_position()
@@ -300,23 +301,7 @@ async def main():
                     followline = False
                     break        
                     
-                '''
-                package_detection()
-                global package_picked_up
-                if package_picked_up:
-                    print("Requesting route...")
-                    time.sleep(5)
-                    route = request_route()
-                    while len(route) == 0:
-                        print("No route received, requesting again...")
-                        route = request_route()
-                    print(route)
-                    route_received = True
-                else:
-                    gpg.stop()
-                    continue
-                send_message_to_server("Route received")
-                '''
+
             if route_received:
                 
                 if (linevalues[0] < threshold and linevalues[1] < threshold and linevalues[2] < threshold and linevalues[3] < threshold and linevalues[4] < threshold
